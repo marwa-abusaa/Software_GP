@@ -5,7 +5,7 @@ const fogetPassServices = require('../services/fogetPass.services');
 exports.register = async (req, res, next) => {
     try {
         console.log("---req body---", req.body);
-        const { email, password, firstName, lastName, gender, birthdate,role } = req.body;
+        const { email, password, firstName, lastName, gender, birthdate,role,cv} = req.body;
 
         // Check for missing parameters
         if (!email || !password || !firstName || !lastName || !gender || !birthdate) {
@@ -19,7 +19,7 @@ exports.register = async (req, res, next) => {
         }
 
         // Register the user with additional information
-        const response = await UserServices.registerUser(email, password, firstName, lastName, gender, birthdate,role);
+        const response = await UserServices.registerUser(email, password, firstName, lastName, gender, birthdate,role,cv);
         res.status(201).json({ status: true, success: 'User registered successfully' }); // 201 Created
     } catch (err) {
         console.log("---> err -->", err);
@@ -42,6 +42,14 @@ exports.login = async (req, res, next) => {
             return res.status(404).json({ status: false, error: 'User does not exist' }); // 404 Not Found
         }
 
+        // Check if the user's role is 'supervisor' and if 'activated' is not 'activated'
+        if (user.role === 'supervisor' && user.activated !== 'activated') {
+            return res.status(403).json({
+                status: false,
+                error: 'The admin still has not accepted your request for being a supervisor in TinyTales',
+            }); // 403 Forbidden
+        }
+
         // Validate password
         const isPasswordCorrect = await user.comparePassword(password);
         if (!isPasswordCorrect) {
@@ -49,16 +57,21 @@ exports.login = async (req, res, next) => {
         }
 
         // Generate token
-        const userRole=user.role;
+        const userRole = user.role;
         const tokenData = { _id: user._id, email: user.email };
         const token = await UserServices.generateAccessToken(tokenData, "secret", "1h");
 
-        res.status(200).json({ status: true, success: "Login successful", token: token ,role:userRole}); // 200 OK
+        res.status(200).json({
+            status: true,
+            success: "Login successful",
+            token: token,
+            role: userRole,
+        }); // 200 OK
     } catch (error) {
         console.log(error, 'err---->');
         next(error); // Forward error to the error handler
     }
-}
+};
 
 
 exports.newPass=async (req, res, next) =>{
@@ -104,9 +117,6 @@ exports.resetPass=async (req, res, next) =>{
 
 exports.updateUserProfile = async (req, res, next) => {
     const { email,password,firstName, lastName, gender, birthdate, role } = req.body; // Get new profile data from the request body
-
-
-
     try {
         // Check if user exists
         const user = await UserServices.checkUser(email);
@@ -132,39 +142,7 @@ exports.updateUserProfile = async (req, res, next) => {
     }
 }
 
-exports.getUserProfile = async (req, res, next) => {
-    const { email } = req.query;  // Extract email from query parameters
-console.log("email is" +email);
-    // Check if the email is provided
-    if (!email) {
-        return res.status(400).json({ status: false, error: 'Email is required' }); // 400 Bad Request
-    }
 
-    // Check if user exists
-    try {
-        const user = await UserServices.checkUser(email);
-        if (!user) {
-            return res.status(404).json({ status: false, error: 'User does not exist' }); // 404 Not Found
-        }
-
-        // Retrieve user data (excluding sensitive information like password)
-        const userProfile = {
-            firstName: user.firstName,
-            lastName: user.lastName,
-            email: user.email,
-            gender: user.gender,
-            birthdate: user.birthdate,
-            password:user.password
-            //role: user.role,
-        };
-
-        // Send the user profile as response
-        res.status(200).json({ status: true, data: userProfile }); // 200 OK
-    } catch (error) {
-        console.error(error);
-        next(error); // Forward error to the error handler
-    }
-};
 
 
 exports.deleteUser= async(req, res, next) =>{
@@ -188,4 +166,64 @@ catch (error) {
 }
 
 }
+exports.getUserProfile = async (req, res, next) => {
+    const { email } = req.query;  // Extract email from query parameters
+console.log("email is" +email);
+    // Check if the email is provided
+    if (!email) {
+        return res.status(400).json({ status: false, error: 'Email is required' }); // 400 Bad Request
+    }
 
+    // Check if user exists
+    try {
+        const user = await UserServices.checkUser(email);
+        if (!user) {
+            return res.status(404).json({ status: false, error: 'User does not exist' }); // 404 Not Found
+        }
+
+        // Retrieve user data (excluding sensitive information like password)
+        const userProfile = {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            gender: user.gender,
+            birthdate: user.birthdate,
+            password:user.password,
+            cv:user.cv
+            //role: user.role,
+        };
+
+        // Send the user profile as response
+        res.status(200).json({ status: true, data: userProfile }); // 200 OK
+    } catch (error) {
+        console.error(error);
+        next(error); // Forward error to the error handler
+    }
+};
+
+exports.updateActivation = async (req, res, next) =>{
+    const { email,note,activated} = req.body;
+    const password=null;
+     // Check for missing parameters
+     if (!email || !note||!activated) {
+        return res.status(400).json({ status: false, error: 'All fields are required' }); // 400 Bad Request
+    }
+
+     // Check if user exists
+     const user = await UserServices.checkUser(email);
+     if (!user) {
+         return res.status(404).json({ status: false, error: 'User not found' }); // 404 Not Found
+     }
+
+    const updatedData = {};
+    if (activated) updatedData.activated = activated;
+    // Update user profile
+    await UserServices.updateUser(email, updatedData,password);
+
+    console.log("user updated");
+    UserServices.sendActivatedEmail(email,note,activated);
+    res.status(200).json({ status: true, message: 'Activation is done  successfully' }); // 200 OK
+
+
+
+}

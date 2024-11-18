@@ -7,6 +7,6 @@ router.patch("/profile", UserController.updateUserProfile);
 router.get("/profile", UserController.getUserProfile);
 router.delete("/profile", UserController.deleteUser);
 router.patch("/newPass", UserController.newPass);
-
+router.post("/activate", UserController.updateActivation);
 
 module.exports = router;

@@ -40,6 +40,12 @@ const userSchema = new Schema({
         //supervisor
         enum: ['user', 'supervisor','admin'], // You can adjust this to your needs
         required: [true, "role is required"],
+    },
+    cv:{
+        type: String
+    },
+    activated:{
+        type: String
     }
 
 }, { timestamps: true });
