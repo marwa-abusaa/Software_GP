@@ -33,6 +33,9 @@ const bookSchema = new Schema({
     },
     pdfLink:{
         type: String
+    },
+    email:{
+        type: String
     }
 
 }, { timestamps: true });

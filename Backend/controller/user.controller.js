@@ -1,5 +1,8 @@
 const UserServices = require('../services/user.services');
 const fogetPassServices = require('../services/fogetPass.services');
+const supervisorServices = require('../services/supervisor.service');
+const superChildServices = require('../services/superChild.service');
+const childServices = require('../services/child.service');
 
 
 exports.register = async (req, res, next) => {
@@ -17,9 +20,15 @@ exports.register = async (req, res, next) => {
         if (duplicate) {
             return res.status(409).json({ status: false, error: `Email ${email} is already registered` }); // 409 Conflict
         }
+        if(role=='user'){
+            supervisor=await supervisorServices.getSupervisorWithMinStudentNum();
+            console.log("min email"+supervisor.email);
+            superChildServices.registerUser(supervisor.email,email);
+            childServices.registerUser(email,0,0,0,0);
 
+        }
         // Register the user with additional information
-        const response = await UserServices.registerUser(email, password, firstName, lastName, gender, birthdate,role,cv);
+        const response = await UserServices.registerUser(email, password, firstName, lastName, gender, birthdate,role,cv,"");
         res.status(201).json({ status: true, success: 'User registered successfully' }); // 201 Created
     } catch (err) {
         console.log("---> err -->", err);
@@ -116,7 +125,7 @@ exports.resetPass=async (req, res, next) =>{
 
 
 exports.updateUserProfile = async (req, res, next) => {
-    const { email,password,firstName, lastName, gender, birthdate, role } = req.body; // Get new profile data from the request body
+    const { email,password,firstName, lastName, gender, birthdate, role,image } = req.body; // Get new profile data from the request body
     try {
         // Check if user exists
         const user = await UserServices.checkUser(email);
@@ -131,6 +140,7 @@ exports.updateUserProfile = async (req, res, next) => {
         if (gender) updatedData.gender = gender;
         if (birthdate) updatedData.birthdate = birthdate;
         if (role) updatedData.role = role;
+        if (image) updatedData.image = image;
 
         // Update user profile
         await UserServices.updateUser(email, updatedData,password);
@@ -141,8 +151,6 @@ exports.updateUserProfile = async (req, res, next) => {
         next(error); // Forward error to the error handler
     }
 }
-
-
 
 
 exports.deleteUser= async(req, res, next) =>{
@@ -189,7 +197,7 @@ console.log("email is" +email);
             gender: user.gender,
             birthdate: user.birthdate,
             password:user.password,
-            cv:user.cv
+            image:user.image,
             //role: user.role,
         };
 
@@ -219,6 +227,7 @@ exports.updateActivation = async (req, res, next) =>{
     if (activated) updatedData.activated = activated;
     // Update user profile
     await UserServices.updateUser(email, updatedData,password);
+    await supervisorServices.updateUser(email, updatedData);
 
     console.log("user updated");
     UserServices.sendActivatedEmail(email,note,activated);

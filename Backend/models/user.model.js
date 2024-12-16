@@ -41,10 +41,10 @@ const userSchema = new Schema({
         enum: ['user', 'supervisor','admin'], // You can adjust this to your needs
         required: [true, "role is required"],
     },
-    cv:{
-        type: String
-    },
+    
     activated:{
+        type: String
+    },image:{
         type: String
     }
 

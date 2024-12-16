@@ -1,17 +1,22 @@
 const UserModel = require("../models/user.model");
+const supervisorServices = require('../services/supervisor.service');
+
 const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 
 class UserServices {
 
-    static async registerUser(email, password, firstName, lastName, gender, birthdate,role,cv) {
+    static async registerUser(email, password, firstName, lastName, gender, birthdate,role,cv,image) {
         try {
             console.log("-----Email --- Password-----", email, password);
             
              // Determine the 'activated' field based on the role
         const activated = role === 'supervisor' ? 'not' : 'activated';
+        if(role=='supervisor' ){
+            supervisorServices.registerUser(email,cv,0);
+        }
 
-            const createUser = new UserModel({ email, password, firstName, lastName, gender, birthdate,role,cv,activated});
+            const createUser = new UserModel({ email, password, firstName, lastName, gender, birthdate,role,activated,image});
             return await createUser.save();
         } catch (err) {
             throw err;

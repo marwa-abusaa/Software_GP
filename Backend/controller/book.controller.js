@@ -4,10 +4,10 @@ const BookServices = require('../services/book.service');
 exports.register = async (req, res, next) => {
     try {
         console.log("---req body---", req.body);
-        const { name, author, Description, category, rate, image,pdfLink} = req.body;
+        const { name, author, Description, category, rate, image,pdfLink,email} = req.body;
 
         // Check for missing parameters
-        if (!name || !author || !Description || !category || !rate || !image) {
+        if (!name || !author || !Description || !category ) {
             console.log("BODY    "+name, author, Description, category, rate, image,pdfLink)
             return res.status(400).json({ status: false, error: 'All fields are required' }); // 400 Bad Request
         }
@@ -19,7 +19,7 @@ exports.register = async (req, res, next) => {
         }
 
         // Register the user with additional information
-        const response = await BookServices.addNewBook(name, author, Description, category, rate, 0,image,pdfLink);
+        const response = await BookServices.addNewBook(name, author, Description, category, rate, 0,image,pdfLink,email);
         res.status(201).json({ status: true, success: 'Book has been added successfully' }); // 201 Created
     } catch (err) {
         console.log("---> err -->", err);
@@ -55,6 +55,7 @@ exports.getBookByName = async (req, res, next) =>{
                 review:book.review,
                 image:book.image,
                 pdfLink:book.pdfLink,
+                email:book.email
             };
             console.log("successfully get the book details");
             // Send the user profile as response
@@ -64,6 +65,35 @@ exports.getBookByName = async (req, res, next) =>{
             next(error); // Forward error to the error handler
         }
     
+
+}
+
+exports.getBooksByEmail = async (req, res, next) =>{
+    
+    const { email } = req.params; // Get email from the request parameters
+   ;  // Extract email from query parameters
+console.log("email is" +email);
+   // Check if the email is provided
+   if (!email) {
+       return res.status(400).json({ status: false, error: 'email is required' }); // 400 Bad Request
+   }
+
+   // Check if user exists
+   try {
+       const images =  await BookServices.getBooksByEmail(email);
+       if (!images) {
+           return res.status(404).json({ status: false, error: 'images do not exist' }); // 404 Not Found
+       }
+
+     
+       console.log("successfully get the  Images");
+       // Send the user profile as response
+       res.status(200).json({ status: true, data: images  }); // 200 OK
+   } catch (error) {
+       console.error(error);
+       next(error); // Forward error to the error handler
+   }
+
 
 }
 

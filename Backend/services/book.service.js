@@ -2,11 +2,11 @@ const BookModel = require("../models/book.model");
 
 class BookService{
 
-    static async addNewBook(name, author, Description,category, rate, review,image,pdfLink) {
+    static async addNewBook(name, author, Description,category, rate, review,image,pdfLink,email) {
         try {
             console.log("-----name --- author-----", name, author);
             
-            const addBook = new BookModel({ name, author, Description, category, rate, review,image,pdfLink });
+            const addBook = new BookModel({ name, author, Description, category, rate, review,image,pdfLink,email});
             return await addBook.save();  // <--- Ensure you're returning this
         } catch (err) {
             throw err;
@@ -34,6 +34,14 @@ class BookService{
         
     }
 
+    static async getBooksByEmail(email) {
+        try {
+            return await BookModel.find({ email }); // Find all images with the provided email
+        } catch (err) {
+            console.log(err);
+            throw err; // Ensure the error is thrown for upstream handling
+        }
+    }
     //update book used for rating
     static async  updateBook(bookName, updatedData) {
         const result = await BookModel.updateOne({ name: bookName }, { $set: updatedData });
