@@ -81,6 +81,21 @@ class supervisorServices {
         throw error;
     }
   }
+   // Function to get all supervisors where activated='not'
+   static async getSupervisorsWithNotActivated() {
+    try {
+        const supervisors = await supervisorModel.find({ activated: 'not' });
+
+        if (!supervisors || supervisors.length === 0) {
+            throw new Error('No supervisors found with activated status as "not".');
+        }
+
+        return supervisors;
+    } catch (error) {
+        console.error(`Error fetching supervisors with activated='not': ${error.message}`);
+        throw error;
+    }
+}
   
 }
 

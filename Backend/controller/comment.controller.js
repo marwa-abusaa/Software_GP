@@ -3,6 +3,9 @@ const userServices = require('../services/user.services');
 const bookServices = require('../services/book.service');
 
 
+const Sentiment = require('sentiment');
+const sentiment = new Sentiment();
+
 exports.addComment = async (req, res, next) => {
     try {
         console.log("---req body---", req.body);
@@ -17,15 +20,21 @@ exports.addComment = async (req, res, next) => {
         const user = await userServices.checkUser(email);
         const book = await bookServices.getBookByName(bookName); // check if the book exists
         if (!user) {
-            return res.status(409).json({ status: false, error: `the email ${email} is not registered in the database` }); // 409 Conflict
+            return res.status(409).json({ status: false, error: `The email ${email} is not registered in the database` }); // 409 Conflict
         }
         if (!book) {
-            return res.status(409).json({ status: false, error: `the Book ${bookName} is not registered in the database` }); // 409 Conflict
+            return res.status(409).json({ status: false, error: `The Book ${bookName} is not registered in the database` }); // 409 Conflict
         }
 
         console.log(`Checking if user ${email} has commented on ${bookName}`);
         if (await CommentServices.checkIfUserCommentToBook(email, bookName) != null) {         
             return res.status(410).json({ status: false, error: `You already added a comment to this book, you can edit it` }); // 410 Gone
+        }
+
+        // تحليل المشاعر في التعليق
+        const result = sentiment.analyze(commentText);
+        if (result.score < 0) { // إذا كانت المشاعر سلبية
+            return res.status(400).json({ status: false, error: 'Please refrain from using overly negative comments.' }); // 400 Bad Request
         }
 
         // Register the comment
@@ -36,6 +45,8 @@ exports.addComment = async (req, res, next) => {
         next(err); // Forward error to the error handler
     }
 }
+
+
 
 
 

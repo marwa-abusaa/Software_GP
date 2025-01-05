@@ -1,8 +1,8 @@
 const ContestsService = require('../services/contest.services');
 exports.addContest =  async (req,res,next)=>{
     try {
-        const { supervisorId,title,description,required_score,submit_date,voting_start_date,voting_end_date} = req.body;
-        let contestData = await ContestsService.addContest(supervisorId,title,description,required_score,submit_date,voting_start_date,voting_end_date);
+        const { supervisorId,title,description,required_score,submit_date,voting_start_date,voting_end_date,imageUrl} = req.body;
+        let contestData = await ContestsService.addContest(supervisorId,title,description,required_score,submit_date,voting_start_date,voting_end_date,imageUrl);
         res.json({status: true,success:contestData});
     } catch (error) {
         console.log(error, 'err---->');
@@ -99,7 +99,7 @@ exports.getAllContests =  async (req,res,next)=>{
 // New updateContest function
 exports.updateContest = async (req, res, next) => {
     try {
-        const { id, supervisorId, title, description, required_score, submit_date, voting_start_date, voting_end_date } = req.body;
+        const { id, supervisorId, title, description, required_score, submit_date, voting_start_date, voting_end_date,imageUrl } = req.body;
         let updatedContest = {};
         if (title) updatedContest.title = title;
         if (description) updatedContest.description = description;
@@ -107,8 +107,9 @@ exports.updateContest = async (req, res, next) => {
         if (submit_date) updatedContest.submit_date = submit_date;
         if (voting_start_date) updatedContest.voting_start_date = voting_start_date;
         if (voting_end_date) updatedContest.voting_end_date = voting_end_date;
+        if(imageUrl) updatedContest.imageUrl=imageUrl;
 
-        await ContestsService.updateContest(id, supervisorId, title, description, required_score, submit_date, voting_start_date, voting_end_date);
+        await ContestsService.updateContest(id, supervisorId, title, description, required_score, submit_date, voting_start_date, voting_end_date,imageUrl);
         res.json({ status: true, success: updatedContest });
     } catch (error) {
         console.log(error, 'err---->');

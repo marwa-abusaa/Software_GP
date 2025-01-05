@@ -124,6 +124,25 @@ exports.resetPass=async (req, res, next) =>{
 };
 
 
+exports.searchUsers=async (req, res, next) =>{
+    try {
+        // Extract the search term from query parameters
+        const searchTerm = req.query.searchTerm;
+        const superEmail = req.query.superEmail;
+        if (!searchTerm || searchTerm.trim() === '') {
+            return res.status(400).json({ message: 'Search term is required.' });
+        }
+
+        // Call the service function to search users
+        const users = await UserServices.searchUsers(searchTerm,superEmail);
+
+        // Respond with the search results
+        return res.status(200).json({ users });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: 'An error occurred while searching for users.' });
+    }
+}
 exports.updateUserProfile = async (req, res, next) => {
     const { email,password,firstName, lastName, gender, birthdate, role,image } = req.body; // Get new profile data from the request body
     try {
@@ -231,8 +250,54 @@ exports.updateActivation = async (req, res, next) =>{
 
     console.log("user updated");
     UserServices.sendActivatedEmail(email,note,activated);
+    if(activated=='not'){
+        UserServices.deleteUserByEmail(email);
+        await supervisorServices.deleteUserByEmail(email);
+
+    }
     res.status(200).json({ status: true, message: 'Activation is done  successfully' }); // 200 OK
 
 
 
 }
+
+
+exports.getAllUsersWithRoleUser = async (req, res, next) => {
+    try {
+        // Fetch all users with role 'user'
+        const users = await UserServices.getUsersByRole('user');
+        res.status(200).json({ status: true, users }); // 200 OK
+    } catch (error) {
+        console.error(error);
+        next(error); // Forward error to the error handler
+    }
+};
+
+exports.searchUsersByName = async (req, res, next) => {
+    const { searchTerm } = req.query;
+
+    // Check for missing search term
+    if (!searchTerm || searchTerm.trim() === '') {
+        return res.status(400).json({ status: false, error: 'Search term is required' }); // 400 Bad Request
+    }
+
+    try {
+        let users = [];
+        const terms = searchTerm.split(' ').filter(term => term); // Split and clean search term
+
+        if (terms.length === 1) {
+            // Search by first or last name
+            users = await UserServices.searchUsersByPartialName(terms[0], 'user');
+        } else if (terms.length === 2) {
+            // Search by full name
+            users = await UserServices.searchUsersByFullName(terms[0], terms[1], 'user');
+        } else {
+            return res.status(400).json({ status: false, error: 'Invalid search term format' }); // 400 Bad Request
+        }
+
+        res.status(200).json({ status: true, users }); // 200 OK
+    } catch (error) {
+        console.error(error);
+        next(error); // Forward error to the error handler
+    }
+};

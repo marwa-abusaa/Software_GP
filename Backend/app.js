@@ -6,7 +6,7 @@ const UserRoute = require("./routes/user.router");
 const SuperVisorRoute = require("./routes/supervisor.router");
 const SuperChildRoute = require("./routes/superChild.router");
 const childRoute = require("./routes/child.router");
-
+const cors =require("cors");
 
 const BookRoute = require("./routes/book.router");
 const CommentRoute = require("./routes/comment.router");
@@ -19,10 +19,16 @@ const contestJoinRoutes = require('./routes/contestJoin.router');
 const contestVoteRoutes = require('./routes/contestVote.router');
 const QuizRoute = require('./routes/quiz.router');
 const UsermarkRoute = require('./routes/userMark.router');
+const favRoute = require('./routes/fav.router');
+const followerRoutes = require('./routes/followerRoutes');
+const ProgressRoutes = require('./routes/progressDataRoutes');
+
+//record
+const RecordingsRoute = require('./routes/recordings.router');
 const app = express();
 
-// Enable CORS for all requests
-//app.use(cors());
+// Enable CORS for all rsequests
+app.use(cors());
 
 // Increase limit to 10MB (or adjust as necessary)
 app.use(bodyParser.json({ limit: '10mb' }));
@@ -49,4 +55,17 @@ app.use('/', contestVoteRoutes);
 //marwa/quiz
 app.use("/",QuizRoute);
 app.use("/",UsermarkRoute);
+
+/// fav
+app.use('/', favRoute);
+
+// follow
+app.use('/', followerRoutes);
+
+// pgroress
+app.use('/', ProgressRoutes);
+
+//marwa/recordings
+app.use("/",RecordingsRoute);
+
 module.exports = app;

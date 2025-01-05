@@ -78,4 +78,11 @@ console.log("email is" +email);
         next(error); // Forward error to the error handler
     }
 };
-
+exports.getNotActivatedSupervisors= async (req, res, next) => {
+    try {
+        const supervisors = await supervisorServices.getSupervisorsWithNotActivated();
+        res.status(200).json(supervisors);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}

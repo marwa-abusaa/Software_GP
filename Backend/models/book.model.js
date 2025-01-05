@@ -36,8 +36,10 @@ const bookSchema = new Schema({
     },
     email:{
         type: String
-    }
-
+    },
+    publishDate: {
+        type: Date,
+    },
 }, { timestamps: true });
 
 const bookModel = db.model('book', bookSchema);

@@ -17,9 +17,9 @@ exports.register = async (req, res, next) => {
         if (duplicate) {
             return res.status(409).json({ status: false, error: `book named  ${name} is already registered` }); // 409 Conflict
         }
-
-        // Register the user with additional information
-        const response = await BookServices.addNewBook(name, author, Description, category, rate, 0,image,pdfLink,email);
+ // الحصول على التاريخ الحالي
+ const currentDate = new Date(); // التاريخ والوقت الحالي        // Register the user with additional information
+        const response = await BookServices.addNewBook(name, author, Description, category, rate, 0,image,pdfLink,email,currentDate);
         res.status(201).json({ status: true, success: 'Book has been added successfully' }); // 201 Created
     } catch (err) {
         console.log("---> err -->", err);
@@ -55,7 +55,8 @@ exports.getBookByName = async (req, res, next) =>{
                 review:book.review,
                 image:book.image,
                 pdfLink:book.pdfLink,
-                email:book.email
+                email:book.email,
+                publishDate:book.publishDate
             };
             console.log("successfully get the book details");
             // Send the user profile as response

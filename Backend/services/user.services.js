@@ -1,4 +1,5 @@
 const UserModel = require("../models/user.model");
+const superChildModel = require("../models/superChild.model");
 const supervisorServices = require('../services/supervisor.service');
 
 const nodemailer = require('nodemailer');
@@ -31,6 +32,64 @@ class UserServices {
             throw err; // Ensure the error is thrown for upstream handling
         }
     }
+
+    // Function to search users by custom criteria
+    static async searchUsersByCriteria  (criteria) {
+    try {
+      return await UserModel.find(criteria).select('-password'); // Exclude password
+    } catch (err) {
+      console.log(err);
+      throw err;
+    }
+  };
+
+    static async searchUsers(searchTerm, superEmail) {
+        try {
+            // Trim the search term and split it into words
+            const searchParts = searchTerm.trim().split(' ');
+            let searchQuery = {};
+    
+            if (searchParts.length > 1) {
+                // If the term contains a space, search as firstName + lastName
+                searchQuery = {
+                    $and: [
+                        { firstName: { $regex: searchParts[0], $options: 'i' } }, // Case-insensitive match for firstName
+                        { lastName: { $regex: searchParts[1], $options: 'i' } }   // Case-insensitive match for lastName
+                    ],
+                    role: 'user' // Ensure the role is 'user'
+                };
+            } else {
+                // If a single word, search in both firstName and lastName
+                searchQuery = {
+                    $or: [
+                        { firstName: { $regex: searchParts[0], $options: 'i' } }, // Case-insensitive match for firstName
+                        { lastName: { $regex: searchParts[0], $options: 'i' } }   // Case-insensitive match for lastName
+                    ],
+                    role: 'user' // Ensure the role is 'user'
+                };
+            }
+    
+            // Query the superChildren model to find child emails associated with the provided superEmail
+            const superChildren = await superChildModel.find({ superEmail });
+    
+            if (superChildren.length === 0) {
+                // If there are no associated children for the provided superEmail, return an empty array or handle the case as needed
+                return [];
+            }
+    
+            const childEmails = superChildren.map(sc => sc.childEmail);
+    
+            // Add a condition to ensure the search results are only for users whose email is in the list of childEmails
+            searchQuery.email = { $in: childEmails };
+    
+            // Execute the query and return the matching users
+            return await UserModel.find(searchQuery);
+        } catch (err) {
+            console.log(err);
+            throw err; // Ensure the error is thrown for upstream handling
+        }
+    }
+    
 
     static async checkUser(email) {
         try {
@@ -79,6 +138,7 @@ class UserServices {
     if(activated!="not"){
         note="congratulation , you have been accepted for being a supervisor in our Tiny Tales \n waiting for you! \n "+
                 "login with the email and password you created";
+                
     }
    
     const mailOptions = {
@@ -91,6 +151,31 @@ class UserServices {
     await transporter.sendMail(mailOptions);
 
   }
+
+  // Fetch all users with role 'user'
+  static async getUsersByRole  (role) {
+    return UserModel.find({ role });
+};
+
+// Search users by partial first or last name
+static async searchUsersByPartialName (term, role) {
+    return UserModel.find({
+        role,
+        $or: [
+            { firstName: { $regex: term, $options: 'i' } }, // Case-insensitive search
+            { lastName: { $regex: term, $options: 'i' } }
+        ]
+    });
+};
+
+// Search users by full name
+static async searchUsersByFullName (firstName, lastName, role)  {
+    return UserModel.find({
+        role,
+        firstName: { $regex: firstName, $options: 'i' },
+        lastName: { $regex: lastName, $options: 'i' }
+    });
+};
 
 
 }

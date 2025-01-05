@@ -4,6 +4,7 @@ const CourseModel = require('../models/courses.model');
 const QuizModel = require("../models/quiz.model");
 const UserModel = require("../models/user.model");
 const UserMarkModel = require("../models/userMark.model");
+const superChildModel = require("../models/superChild.model");
 
 
 
@@ -47,16 +48,26 @@ exports.getChildrenMark = async (req, res, next) => {
     try {
         const { courseId } = req.body;
 
-        // استدعاء الخدمة
-        const marks = await UserMarkService.getChildrenMark(courseId);
-        if(marks.length>0){
-            res.status(200).json({ status: true, success: marks });
-        }
-        else{
-            res.status(400).json({ status: false, message: 'No grades yet.' });
-        } 
+        // استرجاع الأطفال المرتبطين بالمشرف بناءً على "superEmail" من طلب "req.body"
+        const { superEmail } = req.body;
+        const children = await superChildModel.find({ superEmail });
 
-        res.json({ status: true, success: marks });
+        // إذا لم يتم العثور على أطفال لهذا المشرف
+        if (!children || children.length === 0) {
+            return res.status(400).json({ status: false, message: 'No children found for this supervisor.' });
+        }
+
+        // استخراج كافة childEmail من الأطفال
+        const childEmails = children.map(child => child.childEmail);
+
+        // استرجاع علامات الأطفال الذين لهم childEmail في childEmails
+        const marks = await UserMarkService.getChildrenMark(courseId, childEmails);
+
+        if (marks.length > 0) {
+            res.status(200).json({ status: true, success: marks });
+        } else {
+            res.status(400).json({ status: false, message: 'No grades found for these children.' });
+        }
     } catch (error) {
         console.log(error, 'err---->');
         next(error);

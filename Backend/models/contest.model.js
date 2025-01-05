@@ -36,6 +36,10 @@ const contestSchema = new Schema({
         type: Date,
         required: true
     },
+    imageUrl:{
+        type: String,
+        required: true
+    }
 },{timestamps:true});
 
 const ContestModel = db.model('contests',contestSchema);

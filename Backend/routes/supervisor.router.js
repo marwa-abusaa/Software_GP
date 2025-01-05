@@ -6,6 +6,7 @@ router.patch("/supervisor", supervisorController.updateUserProfile);
 
 router.delete("/supervisor", supervisorController.deleteUser);
 router.get("/supervisor", supervisorController.getUserProfile);
+router.get("/notActive", supervisorController.getNotActivatedSupervisors);
 
 
 

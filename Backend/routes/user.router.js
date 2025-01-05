@@ -8,5 +8,7 @@ router.get("/profile", UserController.getUserProfile);
 router.delete("/profile", UserController.deleteUser);
 router.patch("/newPass", UserController.newPass);
 router.post("/activate", UserController.updateActivation);
-
+router.get('/users/search', UserController.searchUsers);
+router.get('/all-children', UserController.getAllUsersWithRoleUser);
+router.get('/all-children/search', UserController.searchUsersByName);
 module.exports = router;

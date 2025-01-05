@@ -13,18 +13,18 @@ class UserMarkService{
         return await UserMarkModel.findOne({ userEmail, courseId });
     }
 
-    static async getChildrenMark(courseId) {
-        // استرجاع العلامات بناءً على courseId
-        const marks = await UserMarkModel.find({ courseId });
+    static async getChildrenMark(courseId, childEmails) {
+        // استرجاع العلامات بناءً على courseId و childEmails
+        const marks = await UserMarkModel.find({ courseId, userEmail: { $in: childEmails } });
     
-        // استبدال البريد الإلكتروني باسم المستخدم
+        // استبدال البريد الإلكتروني باسم المستخدم من الأطفال
         const results = await Promise.all(
             marks.map(async (mark) => {
-                // البحث عن المستخدم باستخدام البريد الإلكتروني
-                const user = await UserModel.findOne({ email: mark.userEmail });              
+                // البحث عن الطفل باستخدام childEmail
+                const user = await UserModel.findOne({ email: mark.userEmail });
     
                 return {
-                    userName: user ?  `${user.firstName} ${user.lastName}` : "Unknown",// عرض الاسم إذا وجد أو "غير معروف"
+                    userName: user ? `${user.firstName} ${user.lastName}` : "Unknown", // عرض الاسم إذا وجد أو "غير معروف"
                     courseId: mark.courseId,
                     UserTotalMark: mark.UserTotalMark,
                     totalMark: mark.totalMark,
@@ -34,6 +34,7 @@ class UserMarkService{
     
         return results;
     }
+    
 
     static async getMyCourseGrade(userEmail, courseId) {
         // استرجاع العلامات بناءً على courseId

@@ -2,7 +2,7 @@
 const ContestsModel = require("../models/contest.model");
 const UserModel = require("../models/user.model");
 class ContestsService{
-    static async addContest(supervisorId,title,description,required_score,submit_date,voting_start_date,voting_end_date){
+    static async addContest(supervisorId,title,description,required_score,submit_date,voting_start_date,voting_end_date,imageUrl){
         
         // Fetch supervisor name using supervisorId
         const supervisor = await UserModel.findById(supervisorId);
@@ -13,7 +13,7 @@ class ContestsService{
         // Combine firstName and lastName to create the full name
         const supervisorName = `${supervisor.firstName} ${supervisor.lastName}`;
 
-        const addContest = new ContestsModel({supervisorId,title,description,supervisorName,required_score,submit_date,voting_start_date,voting_end_date});
+        const addContest = new ContestsModel({supervisorId,title,description,supervisorName,required_score,submit_date,voting_start_date,voting_end_date,imageUrl});
         return await addContest.save();
     }
 
@@ -38,7 +38,7 @@ class ContestsService{
         return deleted;
    }
 
-   static async updateContest(id, supervisorId, title, description, required_score, submit_date, voting_start_date, voting_end_date) {
+   static async updateContest(id, supervisorId, title, description, required_score, submit_date, voting_start_date, voting_end_date,imageUrl) {
     // Fetch the contest by ID
     const contest = await ContestsModel.findById(id);
     
@@ -54,6 +54,7 @@ class ContestsService{
     if(submit_date) contest.submit_date = submit_date;
     if(voting_start_date) contest.voting_start_date = voting_start_date;
     if(voting_end_date) contest.voting_end_date = voting_end_date;
+    if(imageUrl) contest.imageUrl=imageUrl;
 
     // Save the updated contest
     return await contest.save();
