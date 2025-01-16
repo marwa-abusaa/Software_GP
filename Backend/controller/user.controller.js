@@ -20,6 +20,24 @@ exports.register = async (req, res, next) => {
         if (duplicate) {
             return res.status(409).json({ status: false, error: `Email ${email} is already registered` }); // 409 Conflict
         }
+
+        // Handle role-specific logic
+        if (role === 'admin') {
+            // Register the admin user with the required fields only
+            const response = await UserServices.registerUser(
+                email,
+                password,
+                firstName,
+                lastName,
+                gender,
+                birthdate,
+                role,
+                "", // cv is not needed for admin
+                ""
+            );
+            return res.status(201).json({ status: true, success: 'Admin registered successfully' });
+        }        
+
         if(role=='user'){
             supervisor=await supervisorServices.getSupervisorWithMinStudentNum();
             console.log("min email"+supervisor.email);
@@ -301,3 +319,86 @@ exports.searchUsersByName = async (req, res, next) => {
         next(error); // Forward error to the error handler
     }
 };
+//////marwa
+exports.getAllUsersWithRole = async (req, res, next) => {
+    const { role } = req.query;
+    try {
+        // Fetch all users with role 'user'
+        const users = await UserServices.getUsersByRole(role);
+        res.status(200).json({ status: true, users }); // 200 OK
+    } catch (error) {
+        console.error(error);
+        next(error); // Forward error to the error handler
+    }
+};
+
+
+///////////
+
+exports.searchNonActicatedUsers = async (req, res, next) => {
+    try {
+        const { query } = req.query; // Get 'query' parameter from request query string
+
+        if (!query) {
+            return res.status(400).json({ error: 'Search query is required.' });
+        }
+
+        const users = await UserServices.searchUsersWithNotActivated(query);
+
+        if (!users || users.length === 0) {
+            return res.status(404).json({ message: 'No non-activated users found for the given query.' });
+        }
+
+        return res.status(200).json({ users });
+    } catch (error) {
+        console.error(`Error in UserController.searchUsers: ${error.message}`);
+        return res.status(500).json({ error: error.message });
+    }
+};
+
+ // Controller function to fetch gender statistics
+ exports.getGenderStatistics= async (req, res, next) => {
+    try {
+        const stats = await UserServices.getGenderStatistics();
+        return res.status(200).json({
+            success: true,
+            message: "Gender statistics fetched successfully.",
+            data: stats,
+        });
+    } catch (err) {
+        console.error(`Error in AdminController.getGenderStatistics: ${err.message}`);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch gender statistics.",
+            error: err.message,
+        });
+    }
+}
+
+exports.getAgeStatistics = async (req, res, next) => {
+    try {
+      const { role } = req.query; // Get the role from the query parameter
+      if (!role) {
+        return res.status(400).json({
+          success: false,
+          message: "Role is required (e.g., user or supervisor).",
+        });
+      }
+  
+      const stats = await UserServices.getAgeStatistics(role);
+  
+      return res.status(200).json({
+        success: true,
+        message: "Age statistics fetched successfully.",
+        data: stats,
+      });
+    } catch (err) {
+      console.error(`Error in AdminController.getAgeStatistics: ${err.message}`);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch age statistics.",
+        error: err.message,
+      });
+    }
+  };
+  

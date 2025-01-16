@@ -60,8 +60,40 @@ async function incrementProgressData(req, res) {
     }
   }
 
+
+// Get total progress data by type for all users grouped by month
+async function getProgressDataByTypeForAdmin(req, res) {
+  const { type } = req.query;
+
+  if (!type) {
+    return res.status(400).json({ message: 'Type is required' });
+  }
+
+  try {
+    const aggregatedData = await ProgressData.aggregate([
+      {
+        $match: { type }, // Filter by the specified type
+      },
+      {
+        $group: {
+          _id: '$month', // Group by month
+          totalCount: { $sum: '$count' }, // Sum the count for each month
+        },
+      },
+      {
+        $sort: { _id: 1 }, // Sort the results by month
+      },
+    ]);
+
+    res.status(200).json({ message: 'Progress data by type for all users', data: aggregatedData });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching data', error: error.message });
+  }
+}
+
 module.exports = {
   getProgressData,
   addProgressData,
   incrementProgressData,
+  getProgressDataByTypeForAdmin
 };

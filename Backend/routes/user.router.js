@@ -11,4 +11,12 @@ router.post("/activate", UserController.updateActivation);
 router.get('/users/search', UserController.searchUsers);
 router.get('/all-children', UserController.getAllUsersWithRoleUser);
 router.get('/all-children/search', UserController.searchUsersByName);
+router.get('/search-notActive', UserController.searchNonActicatedUsers);
+router.get('/gender-statistics', UserController.getGenderStatistics);
+router.get('/age-statistics', UserController.getAgeStatistics);
+///marwa
+router.get('/all-users', UserController.getAllUsersWithRole);
+
+
+
 module.exports = router;

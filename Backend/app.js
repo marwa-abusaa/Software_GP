@@ -25,7 +25,13 @@ const ProgressRoutes = require('./routes/progressDataRoutes');
 
 //record
 const RecordingsRoute = require('./routes/recordings.router');
+
+//category
+const categoryRoutes = require('./routes/categoryRoutes');
+
 const app = express();
+//dashboard
+const dashboardRoutes = require('./routes/dashboard.router');
 
 // Enable CORS for all rsequests
 app.use(cors());
@@ -67,5 +73,9 @@ app.use('/', ProgressRoutes);
 
 //marwa/recordings
 app.use("/",RecordingsRoute);
+app.use("/",categoryRoutes);
+
+//marwa//dashboard
+app.use("/",dashboardRoutes);
 
 module.exports = app;

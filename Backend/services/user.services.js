@@ -178,6 +178,98 @@ static async searchUsersByFullName (firstName, lastName, role)  {
 };
 
 
+// Function to search users where activated='not' with partial search
+static async searchUsersWithNotActivated(searchQuery) {
+    try {
+        // Split the search query into words
+        const searchWords = searchQuery.trim().split(/\s+/);
+
+        // Check if it's one word or two words
+        let searchCriteria;
+        if (searchWords.length === 1) {
+            const [word] = searchWords;
+            searchCriteria = {
+                activated: 'not',
+                $or: [
+                    { firstName: { $regex: word, $options: 'i' } }, // Case-insensitive partial match on first name
+                    { lastName: { $regex: word, $options: 'i' } },  // Case-insensitive partial match on last name
+                ],
+            };
+        } else if (searchWords.length === 2) {
+            const [firstWord, secondWord] = searchWords;
+            searchCriteria = {
+                activated: 'not',
+                $and: [
+                    { firstName: { $regex: firstWord, $options: 'i' } }, // Match first word in first name
+                    { lastName: { $regex: secondWord, $options: 'i' } }, // Match second word in last name
+                ],
+            };
+        } else {
+            throw new Error('Search query must be one or two words.');
+        }
+
+        // Perform the search
+        const users = await UserModel.find(searchCriteria);
+
+      
+        return users;
+    } catch (error) {
+        console.error(`Error searching users with activated='not': ${error.message}`);
+        throw error;
+    }
+}
+
+ // Function to get the count of girls and boys
+ static async getGenderStatistics() {
+    try {
+        const boysCount = await UserModel.countDocuments({ gender: 'Male' });
+        const girlsCount = await UserModel.countDocuments({ gender: 'Female' });
+
+        return {
+            boys: boysCount,
+            girls: girlsCount,
+        };
+    } catch (err) {
+        console.error(`Error fetching gender statistics: ${err.message}`);
+        throw err;
+    }
+}
+
+static async getAgeStatistics  (role) {
+    try {
+      // Calculate age, filter by role, and group by age
+      const stats = await UserModel.aggregate([
+        {
+          $match: { role: role }, // Filter by role (e.g., 'user' or 'supervisor')
+        },
+        {
+          $project: {
+            age: {
+              $dateDiff: {
+                startDate: "$birthdate",
+                endDate: new Date(),
+                unit: "year",
+              },
+            },
+          },
+        },
+        {
+          $group: {
+            _id: "$age", // Group by age
+            count: { $sum: 1 }, // Count users in each age group
+          },
+        },
+        {
+          $sort: { _id: 1 }, // Sort by age (ascending)
+        },
+      ]);
+  
+      return stats; // Return the aggregated statistics
+    } catch (error) {
+      throw new Error(`Failed to fetch age statistics: ${error.message}`);
+    }
+  };
+
 }
 
 module.exports = UserServices;

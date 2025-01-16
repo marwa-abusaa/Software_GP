@@ -145,3 +145,48 @@ console.log("email is" +email);
         next(error); // Forward error to the error handler
     }
 };
+
+exports.incrementPoints = async (req, res, next) => {
+    const { email, contestScore } = req.body;  // Extract email from query parameters
+console.log("email is" +email);
+    // Check if the email is provided
+    if (!email) {
+        return res.status(400).json({ status: false, error: 'Email is required' }); // 400 Bad Request
+    }
+
+    // Check if user exists
+    try {
+        const user = await childServices.getChildByEmail(email);
+        if (!user) {
+            return res.status(404).json({ status: false, error: 'User does not exist' }); // 404 Not Found
+        }
+     
+        await childServices.incrementCoursePoints(email,contestScore);
+        // Send the user profile as response
+        res.status(200).json({ status: true, data: "successfully incremented" }); // 200 OK
+    } catch (error) {
+        console.error(error);
+        next(error); // Forward error to the error handler
+    }
+};
+
+exports.getChildTotalByEmail= async (req, res, next) => {
+    const { email } = req.body; // Extract email from query parameters
+  
+    try {
+      // Call the service to calculate the total
+      const total = await childServices.calculateTotalByEmail(email);
+  
+      // Return the total as a response
+      res.status(200).json({
+        success: true,
+        total,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+  

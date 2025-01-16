@@ -8,6 +8,7 @@ router.get("/child", childController.getUserProfile);
 router.post("/child/story", childController.incrementCreatedStory);
 router.post("/child/contest", childController.incrementContests);
 router.post("/child/course", childController.incrementCourses);
-
+router.post("/child/points", childController.incrementPoints);
+router.post("/child/totalScore", childController.getChildTotalByEmail);
 
 module.exports = router;

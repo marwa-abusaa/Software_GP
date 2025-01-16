@@ -82,7 +82,7 @@ class supervisorServices {
     }
   }
    // Function to get all supervisors where activated='not'
-   static async getSupervisorsWithNotActivated() {
+ static async getSupervisorsWithNotActivated() {
     try {
         const supervisors = await supervisorModel.find({ activated: 'not' });
 
